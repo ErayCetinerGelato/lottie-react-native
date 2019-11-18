@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v4.view.ViewCompat;
+import androidx.core.view.ViewCompat;
 import android.widget.ImageView;
 import android.view.View.OnAttachStateChangeListener;
 import android.view.View;
@@ -113,7 +113,12 @@ class LottieAnimationViewManager extends SimpleViewManager<LottieAnimationView> 
             int startFrame = args.getInt(0);
             int endFrame = args.getInt(1);
             if (startFrame != -1 && endFrame != -1) {
-              view.setMinAndMaxFrame(args.getInt(0), args.getInt(1));
+               if(startFrame > endFrame){
+                view.setMinAndMaxFrame(endFrame, startFrame);
+                view.reverseAnimationSpeed();
+              } else {
+                view.setMinAndMaxFrame(startFrame, endFrame);
+              }
             }
             if (ViewCompat.isAttachedToWindow(view)) {
               view.setProgress(0f);
@@ -154,36 +159,20 @@ class LottieAnimationViewManager extends SimpleViewManager<LottieAnimationView> 
 
   @ReactProp(name = "sourceName")
   public void setSourceName(LottieAnimationView view, String name) {
+    // To match the behaviour on iOS we expect the source name to be
+    // extensionless. This means "myAnimation" corresponds to a file
+    // named `myAnimation.json` in `main/assets`. To maintain backwards
+    // compatibility we only add the .json extension if no extension is
+    // passed.
+    if (!name.contains(".")) {
+      name = name + ".json";
+    }
     getOrCreatePropertyManager(view).setAnimationName(name);
   }
 
   @ReactProp(name = "sourceJson")
   public void setSourceJson(LottieAnimationView view, String json) {
     getOrCreatePropertyManager(view).setAnimationJson(json);
-  }
-
-  /**
-   *
-   * @param view
-   * @param name
-   */
-  @ReactProp(name = "cacheStrategy")
-  public void setCacheStrategy(LottieAnimationView view, String name) {
-    if (name != null) {
-      LottieAnimationView.CacheStrategy strategy = LottieAnimationView.DEFAULT_CACHE_STRATEGY;
-      switch (name) {
-        case "none":
-          strategy = LottieAnimationView.CacheStrategy.None;
-          break;
-        case "weak":
-           strategy = LottieAnimationView.CacheStrategy.Weak;
-           break;
-        case "strong":
-          strategy = LottieAnimationView.CacheStrategy.Strong;
-          break;
-      }
-      getOrCreatePropertyManager(view).setCacheStrategy(strategy);
-    }
   }
 
   @ReactProp(name = "resizeMode")
@@ -214,11 +203,6 @@ class LottieAnimationViewManager extends SimpleViewManager<LottieAnimationView> 
     getOrCreatePropertyManager(view).setLoop(loop);
   }
 
-  @ReactProp(name = "hardwareAccelerationAndroid")
-  public void setHardwareAcceleration(LottieAnimationView view, boolean use) {
-    getOrCreatePropertyManager(view).setUseHardwareAcceleration(use);
-  }
-
   @ReactProp(name = "imageAssetsFolder")
   public void setImageAssetsFolder(LottieAnimationView view, String imageAssetsFolder) {
     getOrCreatePropertyManager(view).setImageAssetsFolder(imageAssetsFolder);
@@ -227,6 +211,11 @@ class LottieAnimationViewManager extends SimpleViewManager<LottieAnimationView> 
   @ReactProp(name = "enableMergePathsAndroidForKitKatAndAbove")
   public void setEnableMergePaths(LottieAnimationView view, boolean enableMergePaths) {
     getOrCreatePropertyManager(view).setEnableMergePaths(enableMergePaths);
+  }
+
+  @ReactProp(name = "colorFilters")
+  public void setColorFilters(LottieAnimationView view, ReadableArray colorFilters) {
+    getOrCreatePropertyManager(view).setColorFilters(colorFilters);
   }
 
   @Override
